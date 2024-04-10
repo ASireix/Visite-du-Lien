@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using UnityEngine.XR.ARFoundation;
 
 public class MapButton : MonoBehaviour, IPointerClickHandler
 {
     [SerializeField] int iD;
     Image img;
+
     public void OnPointerClick(PointerEventData eventData)
     {
         InfoManager.instance.ShowInfo(iD);
@@ -20,6 +22,7 @@ public class MapButton : MonoBehaviour, IPointerClickHandler
 
     void Update()
     {
-        transform.LookAt(transform.position + Camera.main.transform.rotation * Vector3.forward, Camera.main.transform.rotation * Vector3.up);
+        transform.LookAt(Camera.main.transform.position, Vector3.up);
+        //transform.forward = Camera.main.transform.forward;
     }
 }

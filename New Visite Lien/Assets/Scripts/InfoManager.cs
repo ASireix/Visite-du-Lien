@@ -26,6 +26,7 @@ public class InfoManager : MonoBehaviour
     {
         if (infoDico.TryGetValue(id, out GameObject info))
         {
+            Debug.Log("Found ID");
             info.SetActive(true);
         }
         else

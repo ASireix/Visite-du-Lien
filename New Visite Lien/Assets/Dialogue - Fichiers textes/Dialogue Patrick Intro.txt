@@ -1,0 +1,49 @@
+Bienvenue à tous dans ce tier lieu hors du commun! 
+<br>Je suis Patrick, votre fidèle gardien et guide à travers ce lieu chargé d'histoire.
+
+Après des décennies d'isolement, je suis enfin libre grâce à l'association du Lien, 
+et je suis ravi de faire partie cette équipe dynamique.
+
+[EVENT=Clap]Ce lieu regorge de trésors et de mystères, et c'est avec joie que 
+je vous accompagnerai pour vous en dévoiler tous les secrets.
+
+[EVENT=Point]Alors préparez-vous à être émerveillés et laissez-moi vous dire qu'un homme averti en vaut Dieu !
+
+[EVENT=FAIT LE SIGNE DE JUL]Comme tu peux le constater je ne n'ai pas de bras.
+<br>Pas de bras pas de chocolat.
+
+[EVENT=NOJUL]Maintenant, laissez-moi vous parler du Lien. Le Lien est bien plus qu'une simple association. 
+C'est une communauté engagée dans la construction d'un monde meilleur. 
+
+Fondée il y a quelques années, le Lien a une histoire riche et diversifiée, 
+marquée par des actions concrètes en faveur du bien-être social, environnemental et territorial.
+
+[EVENT=FAIT LE SIGNE DE JUL]Les objectifs et les valeurs du Lien sont au cœur de notre mission. 
+Nous nous engageons à promouvoir l'inclusion, la diversité et la solidarité. 
+
+[EVENT=NOJUL]Nous croyons en un monde où chacun a sa place et peut contribuer à son développement.
+
+[EVENT=Clap]Parlons maintenant de l'impact du Lien. Notre association a un impact significatif sur la société, 
+l'environnement et le territoire. 
+
+Nous soutenons des initiatives locales, nous promouvons la durabilité environnementale et nous 
+renforçons le lien social dans nos communautés.
+
+[EVENT=Clap]Maintenant, passons au principe du jeu. 
+
+[EVENT=ActiveMap]En appuyant sur le bouton 'carte', vous ouvrez la carte du tiers-lieu. 
+Cette carte vous permet de visualiser les différents bâtiments présents dans le tiers-lieu 
+et d'obtenir des informations supplémentaires sur chacun d'eux.
+
+[EVENT=Point]Mais ce n'est pas tout ! 
+
+Si vous vous sentez perdus ou si vous ne savez pas par où commencer, 
+[EVENT=ActiveScan]vous pouvez toujours compter sur le bouton 'scan'. 
+
+En appuyant sur ce bouton, l'application vous indiquera le QR code le plus proche. 
+Il vous suffit ensuite de scanner ce QR code pour débuter la visite d'un bâtiment et le déverrouiller sur la carte.
+
+En explorant les différents bâtiments et en scannant les QR codes, 
+vous pourrez découvrir tous les secrets et les trésors cachés de ce tiers-lieu fascinant. 
+
+[EVENT=Point]Alors, préparez-vous à vivre une expérience immersive et passionnante !

@@ -60,6 +60,7 @@ public class Dialogue : MonoBehaviour
         {
             StopCoroutine(_typingCoroutine);
             uiText.text = _textTyped;
+            uiText.maxVisibleCharacters = uiText.textInfo.characterCount;
             _isTyping = false;
             onSentenceTyped?.Invoke();
             return;
@@ -91,14 +92,27 @@ public class Dialogue : MonoBehaviour
         _textTyped = sentence;
         _isTyping = true;
         
-        uiText.text = "";
+        uiText.text = sentence;
+        uiText.maxVisibleCharacters = 0;
+
+        char[] letters = sentence.ToCharArray();
+        int index = 0;
+        while (index < letters.Length){
+            uiText.maxVisibleCharacters++;
+            index++;
+            yield return new WaitForSeconds((1f/typeSpeed) / 10f); 
+        }
+
+        _isTyping = false;
+        onSentenceTyped?.Invoke();
+        /*
         foreach(char letter in sentence.ToCharArray())
         {
             uiText.text += letter;
-            yield return new WaitForSeconds((1/typeSpeed) / 10);
+            yield return new WaitForSeconds((1f/typeSpeed+1f) / 10f);
         }
-        _isTyping = false;
-        onSentenceTyped?.Invoke();
+        
+        */
     }
 
     public void EndDialogue()
@@ -112,9 +126,46 @@ public class Dialogue : MonoBehaviour
         string txt = textFile.text;
 
         string[] lines = txt.Split(System.Environment.NewLine.ToCharArray());
+        string lastLine = "";
 
+        for (int i = 0; i < lines.Length; i++)
+        {
+            string line = lines[i];
+
+            if (string.IsNullOrEmpty(lastLine) && !string.IsNullOrEmpty(line))
+            {
+                if (lines[i].StartsWith("["))
+                {
+                    string special = line.Substring(0, line.IndexOf("]") + 1);
+                    string curr = line.Substring(line.IndexOf("]") + 1);
+
+                    _dialogue.Enqueue(special);
+                    lastLine += curr; 
+                }
+                else
+                {
+                    lastLine += line;
+                }
+            }
+            else if (string.IsNullOrEmpty(line) && !string.IsNullOrEmpty(lastLine))
+            {
+                _dialogue.Enqueue(lastLine);
+                lastLine = "";
+            }
+            else
+            {
+                lastLine += line;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(lastLine)){
+            _dialogue.Enqueue(lastLine);
+            lastLine = "";
+        }
+        /*
         foreach (string line in lines)
         {
+            
             if (!string.IsNullOrEmpty(line))
             {
                 if (line.StartsWith("["))
@@ -130,6 +181,7 @@ public class Dialogue : MonoBehaviour
                 }
             }
         }
+        */
         _dialogue.Enqueue("EndQueue");
     }
 

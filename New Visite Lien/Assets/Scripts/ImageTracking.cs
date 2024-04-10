@@ -53,20 +53,20 @@ public class ImageTracking : MonoBehaviour
 
     void ImageChanged(ARTrackedImagesChangedEventArgs eventArgs)
     {
-        Debug.Log("The image changed");
+        //Debug.Log("The image changed");
         foreach (ARTrackedImage trackedImage in eventArgs.added)
         {
-            Debug.Log("Image added");
+            //Debug.Log("Image added");
             UpdateImage(trackedImage);
         }
         foreach (ARTrackedImage trackedImage in eventArgs.updated)
         {
-            Debug.Log("Image updated");
+            //Debug.Log("Image updated");
             UpdateImage(trackedImage);
         }
         foreach (ARTrackedImage trackedImage in eventArgs.removed)
         {
-            Debug.Log("Image Removde");
+            //Debug.Log("Image Removde");
             if (spawnedPrefabs.TryGetValue(trackedImage.referenceImage.name, out GameObject value))
             {
                 value.SetActive(false);
@@ -78,9 +78,11 @@ public class ImageTracking : MonoBehaviour
     {
         string name = trackedImage.referenceImage.name;
         Vector3 position = trackedImage.transform.position;
+        Quaternion rotation = trackedImage.transform.rotation;
 
         GameObject prefab = spawnedPrefabs[name];
         prefab.transform.position = position;
+        prefab.transform.rotation = rotation;
         prefab.SetActive(true);
 
         foreach (var go in spawnedPrefabs.Values)
