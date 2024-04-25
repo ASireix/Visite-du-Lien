@@ -5,16 +5,22 @@ using UnityEngine;
 public class CodeManager : MonoBehaviour
 {
     [SerializeField] string masterCode;
-    [SerializeField] List<DigicodeData> digicodeDatas;
-    Dictionary<string, DigicodeData> codeDico = new Dictionary<string, DigicodeData>();
+    Dictionary<string, EventData> codeEventDico = new Dictionary<string, EventData>();
+    [SerializeField] SaveSystem saveSystem;
     // Start is called before the first frame update
     void Start()
     {
-        foreach (var item in digicodeDatas)
+        foreach (var item in saveSystem.eventDatas)
         {
-            codeDico.TryAdd(item.code, item);
+            codeEventDico.TryAdd(item.code, item);
         }
-        Digicode.onValidate.AddListener(CheckCodeFromManager);    
+        Digicode.onValidate.AddListener(CheckCodeFromManager);
+        Evenement.onEventCompleted.AddListener(CheckCodeEvent);
+        CrackAllSavedCode();
+    }
+
+    void CheckCodeEvent(EventData da){
+        CheckCodeFromManager(da.code);
     }
 
 
@@ -23,22 +29,54 @@ public class CodeManager : MonoBehaviour
         if (code.Equals(masterCode))
         {
             UnlockAll();
+            digicode.AcquireCodeResult(true);
             return;
         }
-        if(codeDico.TryGetValue(code, out DigicodeData digicodeData))
+        else if (codeEventDico.TryGetValue(code, out EventData eventData))
         {
-            digicodeData.OnCodeCracked();
+            eventData.OnCodeCracked();
+            digicode.AcquireCodeResult(true);
+        }
+        else
+        {
+            Debug.Log("Incorrect code");
+            digicode.AcquireCodeResult(false);
+        }
+
+    }
+
+    void CheckCodeFromManager(string code)
+    {
+        if (code.Equals(masterCode))
+        {
+            UnlockAll();
+            return;
+        }
+        else if (codeEventDico.TryGetValue(code, out EventData eventData))
+        {
+            eventData.OnCodeCracked();
         }
         else
         {
             Debug.Log("Incorrect code");
         }
-        
+
+    }
+
+    void CrackAllSavedCode()
+    {
+        for (int i = 0; i < saveSystem.eventDatas.Length; i++)
+        {
+            if (saveSystem.eventDatas[i].isCompleted)
+            {
+                CheckCodeFromManager(saveSystem.eventDatas[i].code);
+            }
+        }
     }
 
     void UnlockAll()
     {
-        foreach (var item in digicodeDatas)
+        foreach (var item in saveSystem.eventDatas)
         {
             item.OnCodeCracked();
         }

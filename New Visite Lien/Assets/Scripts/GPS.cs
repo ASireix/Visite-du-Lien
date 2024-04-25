@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.Android;
 
@@ -18,75 +19,53 @@ public class GPS : MonoBehaviour
 
     private void Start()
     {
-        UpdateLocation();   
+        StartCoroutine(StartGPS());   
     }
 
-    public void UpdateLocation()
+    IEnumerator StartGPS()
     {
-        if (!isUpdating)
+        string log = "";
+        // Check if the user has location service enabled.
+        if (!Input.location.isEnabledByUser)
+            Debug.Log("Location not enabled on device or app does not have permission to access location");
+
+        // Starts the location service.
+        Input.location.Start();
+
+        // Waits until the location service initializes
+        int maxWait = 20;
+        while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
         {
-            isUpdating = true;
-            StartCoroutine(GetLocation());
-            
+            yield return new WaitForSeconds(1);
+            maxWait--;
         }
-    }
-    IEnumerator GetLocation()
-    {
-        while (isUpdating)
+
+        // If the service didn't initialize in 20 seconds this cancels location service use.
+        if (maxWait < 1)
         {
-            debugText.text = "Request perm";
-            if (!Permission.HasUserAuthorizedPermission(Permission.FineLocation))
-            {
-                Permission.RequestUserPermission(Permission.FineLocation);
-                Permission.RequestUserPermission(Permission.CoarseLocation);
-            }
-            // First, check if user has location service enabled
-            if (!Input.location.isEnabledByUser)
-            {
-                yield return new WaitForSeconds(10);
-                debugText.text = "Location is not enabled";
-            }
-
-            debugText.text = "Starting input location";
-            // Start service before querying location
-            Input.location.Start();
-
-            // Wait until service initializes
-            int maxWait = 20;
-            while (Input.location.status == LocationServiceStatus.Initializing && maxWait > 0)
-            {
-                yield return new WaitForSeconds(1);
-                maxWait--;
-            }
-
-            // Service didn't initialize in 20 seconds
-            if (maxWait < 1)
-            {
-                print("Timed out");
-                debugText.text = "timeout";
-                yield break;
-            }
-
-            // Connection has failed
-            if (Input.location.status == LocationServiceStatus.Failed)
-            {
-                print("Unable to determine device location");
-                debugText.text = "Unable to determine location";
-                yield break;
-            }
-            else
-            {
-                latitude = Input.location.lastData.latitude;
-                latText.text = latitude + "";
-                longitude = Input.location.lastData.longitude;
-                lonText.text = longitude + "";
-                // Access granted and location value could be retrieved
-                print("Location: " + Input.location.lastData.latitude + " " + Input.location.lastData.longitude + " " + Input.location.lastData.altitude + " " + Input.location.lastData.horizontalAccuracy + " " + Input.location.lastData.timestamp);
-                debugText.text = "we found the location";
-            }
-
+            log = "Timed out";
+            debugText.text = log;
+            Debug.Log(log);
+            yield return new WaitForSeconds(5);
         }
+
+        // If the connection failed this cancels location service use.
+        if (Input.location.status == LocationServiceStatus.Failed)
+        {
+            log = "Unable to determine device location";
+            debugText.text = log;
+            Debug.LogError(log);
+            yield break;
+        }
+        else
+        {
+            // If the connection succeeded, this retrieves the device's current location and displays it in the Console window.
+            Debug.Log("Location: " + Input.location.lastData.latitude + " " + Input.location.lastData.longitude + " " + Input.location.lastData.altitude + " " + Input.location.lastData.horizontalAccuracy + " " + Input.location.lastData.timestamp);
+            latText.text = Input.location.lastData.latitude+" _ la";
+            lonText.text = Input.location.lastData.longitude+" _ lt";
+        }
+
+        // Stops the location service if there is no need to query location updates continuously.
         Input.location.Stop();
-        isUpdating = false;
     }
 }

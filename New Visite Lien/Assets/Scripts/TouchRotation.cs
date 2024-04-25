@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 [RequireComponent(typeof(Rigidbody))]
 public class TouchRotation : PressInputBase
@@ -12,10 +13,11 @@ public class TouchRotation : PressInputBase
     public int yFactor;
 
     Rigidbody rb;
-
+    [SerializeField] float initialTorque = 0;
     private void Start()
     {
         rb = GetComponent<Rigidbody>();
+        
     }
 
     // Update is called once per frame
@@ -40,4 +42,12 @@ public class TouchRotation : PressInputBase
         base.OnPressCancel();
         _isPressed = false;
     }
+    
+    protected override void OnEnable(){
+        base.OnEnable();
+        if (!rb) rb = GetComponent<Rigidbody>();
+        rb.AddTorque(Vector3.right * initialTorque * Time.deltaTime);
+        rb.AddTorque(Vector3.right * initialTorque * Time.deltaTime);
+    }
+
 }

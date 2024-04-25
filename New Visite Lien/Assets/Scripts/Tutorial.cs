@@ -10,6 +10,7 @@ public class Tutorial : MonoBehaviour
 {
     [Header("Parameters")]
     [SerializeField] bool enableTurorial = true;
+    [SerializeField] bool forceTutorial = true;
     [SerializeField] float waitingTime = 3f;
     [SerializeField] int blinkAmount = 10;
     [Range(0f,2f)]
@@ -29,7 +30,7 @@ public class Tutorial : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (!SETTINGS.isTutorialCompleted && enableTurorial)
+        if ((!SETTINGS.isTutorialCompleted && enableTurorial) || forceTutorial)
         {
             gpsButton.SetActive(false);
             mapButton.SetActive(false);
@@ -40,6 +41,7 @@ public class Tutorial : MonoBehaviour
             dialogueTutorial.onDialogueComplete.AddListener(OnFirstDialogueComplete);
 
             StartCoroutine(DelayStart());
+            PatrickInScene.StartWave();
         }else{
             OnFirstDialogueComplete();
         }
@@ -56,11 +58,12 @@ public class Tutorial : MonoBehaviour
 
     void OnFirstDialogueComplete()
     {
-        gpsButton.SetActive(true);
+        //gpsButton.SetActive(true);
         mapButton.SetActive(true);
         ARsession.GetComponent<ARSession>().enabled = true;
         coworkingBackground.SetActive(false);
         PatrickInScene.gameObject.SetActive(false);
+        SETTINGS.isTutorialCompleted = true;
     }
 
     public void ShowMapButton()
@@ -84,5 +87,4 @@ public class Tutorial : MonoBehaviour
         blinkingObject.SetActive(defaultState);
         if (buttonComponent) buttonComponent.interactable = true;
     }
-    
 }

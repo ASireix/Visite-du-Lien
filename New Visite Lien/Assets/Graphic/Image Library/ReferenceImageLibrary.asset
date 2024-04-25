@@ -23,7 +23,7 @@ MonoBehaviour:
     m_SerializedTextureGuid:
       m_GuidLow: 12876980314293273277
       m_GuidHigh: 16816436638432851625
-    m_Size: {x: 0, y: 0}
-    m_SpecifySize: 0
-    m_Name: TestBatiment
+    m_Size: {x: 0.1, y: 0.1}
+    m_SpecifySize: 1
+    m_Name: Evenement BatD
     m_Texture: {fileID: 0}

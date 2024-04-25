@@ -25,9 +25,9 @@ public class DigicodeButton : Interactable
         base.OnTouch();
         onButtonPressed?.Invoke(codeButton, reset, validate);
         transform.localPosition = spawnPos;
-        LeanTween.moveLocalZ(gameObject, zMovement, pressSpeed).setEaseInOutBounce().setOnComplete(value =>
+        LeanTween.moveLocalZ(gameObject, zMovement, pressSpeed).setEaseInBounce().setOnComplete(value =>
         {
-            LeanTween.moveLocalZ(gameObject, 0, pressSpeed);
+            LeanTween.moveLocalZ(gameObject, spawnPos.z, pressSpeed);
         });
     }
 }

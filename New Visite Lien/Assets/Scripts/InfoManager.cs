@@ -1,16 +1,20 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class InfoManager : MonoBehaviour
 {
     public static InfoManager instance;
-    Dictionary<int, GameObject> infoDico = new Dictionary<int, GameObject>();
+    Dictionary<string, GameObject> infoDico = new Dictionary<string, GameObject>();
 
-    [SerializeField] Sprite unlockSprite;
-    [SerializeField] Sprite pinSprite;
+    [ColorUsage(true, true)] public Color unlockColor;
+    [ColorUsage(true, true)] public Color lockColor;
+    [SerializeField] CanvasGroup notUnlockMsgBox;
+    [System.NonSerialized] public UnityEvent<string> onInfoAdded = new UnityEvent<string>();
+
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         if (instance == null)
         {
@@ -22,7 +26,7 @@ public class InfoManager : MonoBehaviour
         }
     }
 
-    public void ShowInfo(int id, MapButton mapButton = null)
+    public void ShowInfo(string id, MapButton mapButton = null)
     {
         if (infoDico.TryGetValue(id, out GameObject info))
         {
@@ -31,18 +35,38 @@ public class InfoManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("Could not find ID");
+            ShowMsgBox();
+            Invoke("HideMsgBox",2f);
         }
-
-        if (mapButton) mapButton.SetSprite(unlockSprite);
     }
 
-    public void AddInfo(int id, GameObject info)
+    public void AddInfo(string id, GameObject info)
     {
         GameObject obj = Instantiate(info);
-        obj.transform.SetParent(transform,false);
+        obj.transform.SetParent(transform, false);
         obj.SetActive(false);
+        Debug.Log("Information added");
+        if (infoDico.TryAdd(id, obj))
+        {
+            Debug.Log("Added info to dico");
+            onInfoAdded?.Invoke(id);
+        }
+    }
 
-        infoDico.TryAdd(id, obj);
+    public bool UpdatePinGraphic(string id){
+        return infoDico.ContainsKey(id);
+    }
+
+    void ShowMsgBox()
+    {
+        notUnlockMsgBox.alpha = 1f;
+    }
+
+    void HideMsgBox()
+    {
+        LeanTween.value(notUnlockMsgBox.gameObject, 1f, 0f, 2f).setOnUpdate((float val) =>
+        {
+            notUnlockMsgBox.alpha = val;
+        });
     }
 }

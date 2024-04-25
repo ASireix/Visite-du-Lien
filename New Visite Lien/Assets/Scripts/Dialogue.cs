@@ -14,8 +14,10 @@ public class Dialogue : MonoBehaviour
     [Header("Events")]
     [SerializeField] CustomDialogueEvent[] customEvents;
     Dictionary<string, UnityEvent<Dialogue>> _customEventDico = new Dictionary<string, UnityEvent<Dialogue>>();
-    
+
     [SerializeField] TextAsset textFile;
+    [Tooltip("Laissez vide pour utiliser le fichier")]
+    [SerializeField] string url;
     Queue<string> _dialogue = new Queue<string>();
 
     bool _isTyping;
@@ -24,27 +26,55 @@ public class Dialogue : MonoBehaviour
 
     [System.NonSerialized]
     public UnityEvent onSentenceTyped = new UnityEvent();
-
-    [System.NonSerialized]
     public UnityEvent onDialogueComplete = new UnityEvent();
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         #region Init Dico
-        for(int i = 0; i < customEvents.Length; i++)
+        for (int i = 0; i < customEvents.Length; i++)
         {
             CustomDialogueEvent cEvent = customEvents[i];
             _customEventDico.TryAdd(cEvent.eventIdentifier, cEvent.eventToTrigger);
         }
         #endregion
-        dialogueBox.InitDialogueBox(this);
+        _dialogue.Clear();
+
     }
 
     public void TriggerDialogue()
     {
+        if (!string.IsNullOrEmpty(url))
+        {
+            StartCoroutine(TriggerDialogueAsync());
+            return;
+        }
+        dialogueBox.UseDialogueBox(this);
         ReadFile();
+        uiText.text = "";
+        OpenDialogueBox();
+        PrintDialogue();
+    }
 
+    IEnumerator TriggerDialogueAsync()
+    {
+        bool trigger = false;
+        string outT = "";
+        StartCoroutine(WebTextHandler.GetText(url, (bool a, string s) =>
+        {
+            trigger = a;
+            outT = s;
+        }));
+        float timeout = 10f;
+        float timer = 0f;
+        while (!trigger && timer < timeout)
+        {
+            yield return new WaitForEndOfFrame();
+            timer += Time.deltaTime;
+        }
+        dialogueBox.UseDialogueBox(this);
+        ReadFile(outT);
+        uiText.text = "";
         OpenDialogueBox();
         PrintDialogue();
     }
@@ -75,7 +105,7 @@ public class Dialogue : MonoBehaviour
         {
             string eventName = _dialogue.Peek();
             eventName = _dialogue.Dequeue().Substring(eventName.IndexOf("=") + 1, eventName.IndexOf("]") - (eventName.IndexOf("=") + 1));
-            if(_customEventDico.TryGetValue(eventName, out UnityEvent<Dialogue> v))
+            if (_customEventDico.TryGetValue(eventName, out UnityEvent<Dialogue> v))
             {
                 v?.Invoke(this);
             }
@@ -91,63 +121,65 @@ public class Dialogue : MonoBehaviour
     {
         _textTyped = sentence;
         _isTyping = true;
-        
+
         uiText.text = sentence;
         uiText.maxVisibleCharacters = 0;
 
         char[] letters = sentence.ToCharArray();
         int index = 0;
-        while (index < letters.Length){
+        while (index < letters.Length)
+        {
             uiText.maxVisibleCharacters++;
             index++;
-            yield return new WaitForSeconds((1f/typeSpeed) / 10f); 
+            yield return new WaitForSeconds((1f / typeSpeed) / 10f);
         }
 
         _isTyping = false;
         onSentenceTyped?.Invoke();
-        /*
-        foreach(char letter in sentence.ToCharArray())
-        {
-            uiText.text += letter;
-            yield return new WaitForSeconds((1f/typeSpeed+1f) / 10f);
-        }
-        
-        */
     }
 
     public void EndDialogue()
     {
         CloseDialogueBox();
+        dialogueBox.DisposeDialogueBox(this);
         onDialogueComplete?.Invoke();
     }
 
-    void ReadFile()
+    void ReadFile(string newText = "")
     {
-        string txt = textFile.text;
-
+        string txt = "";
+        if (!string.IsNullOrEmpty(newText))
+        {
+            txt = newText;
+        }
+        else
+        {
+            txt = textFile.text;
+        }
+        txt = txt.Replace("\r", "");
         string[] lines = txt.Split(System.Environment.NewLine.ToCharArray());
+
         string lastLine = "";
 
         for (int i = 0; i < lines.Length; i++)
         {
             string line = lines[i];
 
-            if (string.IsNullOrEmpty(lastLine) && !string.IsNullOrEmpty(line))
+            if (string.IsNullOrWhiteSpace(lastLine) && !string.IsNullOrWhiteSpace(line))
             {
                 if (lines[i].StartsWith("["))
                 {
                     string special = line.Substring(0, line.IndexOf("]") + 1);
                     string curr = line.Substring(line.IndexOf("]") + 1);
-
                     _dialogue.Enqueue(special);
-                    lastLine += curr; 
+                    lastLine += curr;
                 }
                 else
                 {
                     lastLine += line;
                 }
             }
-            else if (string.IsNullOrEmpty(line) && !string.IsNullOrEmpty(lastLine))
+            else if (string.IsNullOrWhiteSpace(line) && !string.IsNullOrWhiteSpace(lastLine))
             {
                 _dialogue.Enqueue(lastLine);
                 lastLine = "";
@@ -158,30 +190,12 @@ public class Dialogue : MonoBehaviour
             }
         }
 
-        if (!string.IsNullOrEmpty(lastLine)){
+        if (!string.IsNullOrWhiteSpace(lastLine))
+        {
             _dialogue.Enqueue(lastLine);
             lastLine = "";
         }
-        /*
-        foreach (string line in lines)
-        {
-            
-            if (!string.IsNullOrEmpty(line))
-            {
-                if (line.StartsWith("["))
-                {
-                    string special = line.Substring(0, line.IndexOf("]") + 1);
-                    string curr = line.Substring(line.IndexOf("]") + 1);
-                    _dialogue.Enqueue(special);
-                    _dialogue.Enqueue(curr);
-                }
-                else
-                {
-                    _dialogue.Enqueue(line);
-                }
-            }
-        }
-        */
+
         _dialogue.Enqueue("EndQueue");
     }
 
@@ -197,9 +211,10 @@ public class Dialogue : MonoBehaviour
 
     public void CloseDialogueBox()
     {
-        LeanTween.scale(dialogueBox.gameObject, Vector3.zero, 1f).setEaseOutBounce().setOnComplete(() => {
+        LeanTween.scale(dialogueBox.gameObject, Vector3.zero, 1f).setEaseOutBounce().setOnComplete(() =>
+        {
             dialogueBox.gameObject.SetActive(false);
-            });
-        
+        });
+
     }
 }

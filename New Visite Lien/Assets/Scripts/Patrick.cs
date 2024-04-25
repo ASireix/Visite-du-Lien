@@ -6,19 +6,26 @@ public class Patrick : MonoBehaviour
 {
     [SerializeField] Animator patrickAnim;
 
+    AnimatorOverrideController aoc;
+    protected AnimationClipOverrides clipOverrides;
+
     private void Start()
     {
-        StartWave();
+        //StartWave();
+        aoc = new AnimatorOverrideController(patrickAnim.runtimeAnimatorController);
+        patrickAnim.runtimeAnimatorController = aoc;
+        
+        clipOverrides = new AnimationClipOverrides(aoc.overridesCount);
+        aoc.GetOverrides(clipOverrides);
     }
+
+    public void LaunchCustomAnimationClip(AnimationClip clip){        
+        clipOverrides["Custom Animation"] = clip;
+        aoc.ApplyOverrides(clipOverrides);
+        patrickAnim.SetTrigger("CustomTrigger");
+    }
+
     #region Launch Animations
-    /// <summary>
-    /// Launch Animation using bool
-    /// </summary>
-    /// <param name="animation_Name"></param>
-    /// <param name="state"></param>
-    public void LaunchAnimation(string animation_Name, bool state){
-        patrickAnim.SetBool(animation_Name,state);
-    }
 
 
     /// <summary>
@@ -27,8 +34,17 @@ public class Patrick : MonoBehaviour
     /// <param name="animation_Name"></param>
     public void LaunchAnimation(string animation_Name){
         patrickAnim.SetTrigger(animation_Name);
+        patrickAnim.SetBool("Hold",true);
     }
 
+    public void LaunchAnimationSingle(string animation_Name){
+        patrickAnim.SetTrigger(animation_Name);
+        patrickAnim.SetBool("Hold",false);
+    }
+
+    public void ResetPatrickToidle(){
+        patrickAnim.SetBool("Hold",false);
+    }
 
     /// <summary>
     /// Launch Animation using float and value
@@ -71,3 +87,5 @@ public class Patrick : MonoBehaviour
     }
 #endregion
 }
+
+
