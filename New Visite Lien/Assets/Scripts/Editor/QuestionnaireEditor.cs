@@ -11,7 +11,6 @@ public class QuestionnaireEditor : Editor
     {
         DrawDefaultInspector();
         Questionnaire _target = (Questionnaire)target;
-        
 
         if (GUILayout.Button("Get Questions")){
             _target.GetAllQuestions();

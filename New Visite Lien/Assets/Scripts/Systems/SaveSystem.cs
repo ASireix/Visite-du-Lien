@@ -16,10 +16,12 @@ public class SaveSystem : ScriptableObject
 {
     Dictionary<string, bool> eventsSaves = new Dictionary<string, bool>();
     public EventData[] eventDatas { get; private set; }
+    [SerializeField] UnitAssetPack unitAssetPack;
 
 
     void LoadAllEventDatas()
     {
+        eventDatas = unitAssetPack.EventDatas;
         eventDatas = Resources.LoadAll<EventData>("Event Datas");
 
         for (int i = 0; i < eventDatas.Length; i++)

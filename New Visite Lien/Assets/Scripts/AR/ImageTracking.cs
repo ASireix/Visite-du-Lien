@@ -1,32 +1,61 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
+public class TrackedEvenement{
+    public bool isCompleted;
+    public float progress;
+
+    public bool refreshed;
+
+    public TrackedEvenement(bool _isCompleted,float _progress, bool _refreshed){
+        isCompleted = _isCompleted;
+        progress = _progress;
+        refreshed = _refreshed;
+    }
+}
 public class ImageTracking : MonoBehaviour
 {
-    [SerializeField] GameObject[] placeablePrefabs;
+    [SerializeField] EvenementScriptableObject[] placeablePrefabs;
 
-    Dictionary<string, GameObject> spawnedPrefabs = new Dictionary<string, GameObject>();
+    Dictionary<string, (GameObject, EvenementScriptableObject)> spawnedPrefabs
+    = new Dictionary<string, (GameObject, EvenementScriptableObject)>();
     public ARTrackedImageManager trackedImageManager;
     [SerializeField] XRReferenceImageLibrary runtimeImageLibrary;
+    [SerializeField] ARSession aRSession;
+    public UnityEvent<float> onScanProgress { get; private set; } = new UnityEvent<float>();
+    Dictionary<ARTrackedImage, TrackedEvenement> imagesProgress = new Dictionary<ARTrackedImage, TrackedEvenement>();
+
+    [SerializeField] Image backgroundForFlat;
 
     private void Awake()
     {
         trackedImageManager = FindObjectOfType<ARTrackedImageManager>();
-        
-
         foreach (var item in placeablePrefabs)
         {
-            GameObject newPrefab = Instantiate(item, Vector3.zero, Quaternion.identity);
-            GameObject anchor = new GameObject(item.name,typeof(ARAnchor));
+            GameObject newPrefab;
 
+            if (item.useFlatEvent)
+            {
+                newPrefab = Instantiate(item.flatEvent.gameObject, Vector3.zero, Quaternion.identity);
+                newPrefab.transform.parent = Camera.main.transform;
+                spawnedPrefabs.Add(item.name, (newPrefab, item));
+                newPrefab.SetActive(false);
+            }
+            else
+            {
+                GameObject anchor = new GameObject(item.name, typeof(ARAnchor));
+                newPrefab = Instantiate(item.arEvent.gameObject, Vector3.zero, Quaternion.identity);
+                newPrefab.transform.parent = anchor.transform;
+                spawnedPrefabs.Add(item.name, (anchor, item));
+                anchor.SetActive(false);
+            }
             newPrefab.name = item.name;
-           
-            newPrefab.transform.parent = anchor.transform;
-            spawnedPrefabs.Add(item.name, anchor);
-            anchor.SetActive(false);
+
         }
     }
 
@@ -59,6 +88,7 @@ public class ImageTracking : MonoBehaviour
         foreach (ARTrackedImage trackedImage in eventArgs.added)
         {
             //Debug.Log("Image added");
+            imagesProgress.TryAdd(trackedImage,new TrackedEvenement(false,0f,true));
             UpdateImage(trackedImage);
         }
         foreach (ARTrackedImage trackedImage in eventArgs.updated)
@@ -69,9 +99,10 @@ public class ImageTracking : MonoBehaviour
         foreach (ARTrackedImage trackedImage in eventArgs.removed)
         {
             //Debug.Log("Image Removde");
-            if (spawnedPrefabs.TryGetValue(trackedImage.referenceImage.name, out GameObject value))
+            if (spawnedPrefabs.TryGetValue(trackedImage.referenceImage.name,
+            out (GameObject, EvenementScriptableObject) value))
             {
-                value.SetActive(false);
+                value.Item1.SetActive(false);
             }
         }
     }
@@ -79,19 +110,68 @@ public class ImageTracking : MonoBehaviour
     void UpdateImage(ARTrackedImage trackedImage)
     {
         string name = trackedImage.referenceImage.name;
-        Vector3 position = trackedImage.transform.position;
-        Quaternion rotation = trackedImage.transform.rotation;
+        trackedImage.transform.GetPositionAndRotation(out Vector3 position, out Quaternion rotation);
+        GameObject prefab = spawnedPrefabs[name].Item1;
 
-        GameObject prefab = spawnedPrefabs[name];
-        prefab.transform.position = position;
-        prefab.transform.rotation = rotation;
-        prefab.SetActive(true);
+        if (prefab.activeInHierarchy){
+            imagesProgress[trackedImage].progress = 0f;
+            return;
+        }
 
+        if (trackedImage.trackingState == TrackingState.Tracking)
+        {
+            Debug.Log("We are tracking"+name);
+            imagesProgress[trackedImage].progress += Time.deltaTime;
+            onScanProgress.Invoke(imagesProgress[trackedImage].progress);
+        }
+        else
+        {
+            imagesProgress[trackedImage].progress = 0f;
+        }
+
+        if (imagesProgress[trackedImage].progress > 0.99f)
+        {
+            imagesProgress[trackedImage].progress = 0f;
+            onScanProgress.Invoke(imagesProgress[trackedImage].progress);
+            if (spawnedPrefabs[name].Item2.useFlatEvent)
+            {
+                prefab.SetActive(true);
+                backgroundForFlat.gameObject.SetActive(true);
+                backgroundForFlat.sprite = spawnedPrefabs[name].Item2.backgroundImageForFlatEvent;
+                aRSession.GetComponent<ARSession>().enabled = false;
+            }
+
+            prefab.SetActive(true);
+        }
+        else if (!spawnedPrefabs[name].Item2.useFlatEvent)
+        {
+            prefab.transform.SetPositionAndRotation(position,rotation);
+        }
+        /*
+                string name = trackedImage.referenceImage.name;
+                Vector3 position = trackedImage.transform.position;
+                Quaternion rotation = trackedImage.transform.rotation;
+
+                GameObject prefab = spawnedPrefabs[name].Item1;
+
+                if (spawnedPrefabs[name].Item2.useFlatEvent)
+                {
+                    prefab.SetActive(true);
+                    aRSession.GetComponent<ARSession>().enabled = false;
+                }
+                else
+                {
+                    prefab.transform.position = position;
+                    prefab.transform.rotation = rotation;
+                }
+
+                prefab.SetActive(true);
+        */
         foreach (var go in spawnedPrefabs.Values)
         {
-            if (go.name != name)
+            if (go.Item1.name != name)
             {
-                go.SetActive(false);
+                go.Item1.SetActive(false);
             }
         }
     }

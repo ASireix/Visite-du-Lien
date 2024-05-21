@@ -7,6 +7,11 @@ public class WebTextHandler
 {
 
     public static IEnumerator GetText(string uri, System.Action<bool,string> callback){
+        if (string.IsNullOrEmpty(uri)){
+            Debug.Log("The url is empty");
+            callback(true,"");
+            yield break;
+        }
         UnityWebRequest www = UnityWebRequest.Get(uri);
 
         yield return www.SendWebRequest();

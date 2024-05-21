@@ -21,10 +21,10 @@ public class UIVignetteFadeInOut : MonoBehaviour
         float h;
         for (float i = 0f; i < 1f; i += Time.deltaTime / speed)
         {
-            w = Mathf.Lerp(widthHeight.x,0f,i);
-            h = Mathf.Lerp(widthHeight.y,0f,i);
+            w = Mathf.Lerp(widthHeight.x,-50f,i);
+            h = Mathf.Lerp(widthHeight.y,-50f,i);
             rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,w);
-            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,h);
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical,h);
             yield return null;
         }
     }

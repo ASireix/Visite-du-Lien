@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.XR.ARFoundation;
 
 [RequireComponent(typeof(Animator))]
 public abstract class Evenement : MonoBehaviour
@@ -11,12 +12,14 @@ public abstract class Evenement : MonoBehaviour
     [SerializeField] protected Patrick patrick;
     [System.NonSerialized]
     public static UnityEvent<EventData> onEventCompleted = new UnityEvent<EventData>();
+    [System.NonSerialized]
+    public static UnityEvent<EventData> onEventStarted = new UnityEvent<EventData>();
 
     protected AnimatorOverrideController aoc;
     protected AnimationClipOverrides clipOverrides;
     bool init;
-    // Start is called before the first frame update
-    void Start()
+
+    void Awake()
     {
         eventAnimator = GetComponent<Animator>();
         aoc = new AnimatorOverrideController(eventAnimator.runtimeAnimatorController);
@@ -26,11 +29,19 @@ public abstract class Evenement : MonoBehaviour
         aoc.GetOverrides(clipOverrides);
         OnStart();
         init = true;
-        LaunchStart();
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+
+        //LaunchStart();
     }
 
     void LaunchStart()
     {
+        Debug.Log("launching start");
+        onEventStarted?.Invoke(eventData);
         if (eventData.isCompleted)
         {
             CompletedStart();
@@ -59,9 +70,17 @@ public abstract class Evenement : MonoBehaviour
         eventData.isCompleted = true;
         SaveManager.instance.saveSystem.Save();
         onEventCompleted?.Invoke(eventData);
+        if (transform.parent.gameObject.name == gameObject.name){
+            transform.parent.gameObject.SetActive(false);
+        }else{
+            gameObject.SetActive(false);
+        }
+        
+        EnterARState();
     }
 
-    protected virtual void Reset(){
+    protected virtual void Reset()
+    {
         Debug.Log("Empty reset");
     }
 
@@ -71,5 +90,12 @@ public abstract class Evenement : MonoBehaviour
         {
             LaunchStart();
         }
+    }
+
+
+    public void EnterARState()
+    {
+        ARSessionManager ar = FindObjectOfType<ARSessionManager>();
+        ar.EnterARState();
     }
 }
